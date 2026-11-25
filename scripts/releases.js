@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { compareVersions, downloadPath, loadReleases, maxAssetSize, normalizeReleases } from '../src/data/releases.js';
 import { resolveSiteUrl } from './localization.js';
 
-const appRepository = 'youngluo/cleanu';
+const appRepository = 'openchic/cleanu';
 const releasesFile = new URL('../src/data/changelogs.json', import.meta.url);
 const revisionFile = new URL('../.release-revision.json', import.meta.url);
 

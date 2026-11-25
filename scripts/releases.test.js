@@ -63,7 +63,7 @@ test('read the latest published tag JSON, resolve the DMG ID and ignore older no
   assert.equal(result.releases[0].version, '0.2.0');
   assert.equal(result.releases[0].asset.id, 789);
   assert.equal(result.releases[0].published_at, '2026-10-14T08:00:00.000Z');
-  assert.match(calls[0].url, /youngluo\/cleanu\/releases\/latest$/);
+  assert.match(calls[0].url, /openchic\/cleanu\/releases\/latest$/);
   assert.match(calls[1].url, /contents\/changelogs.json\?ref=v0.2.0$/);
   assert.equal(calls[0].options.headers.Authorization, 'Bearer test-only-token');
   assert.ok(!JSON.stringify(result).includes('test-only-token'));
