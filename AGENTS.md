@@ -2,9 +2,21 @@
 
 只记架构与规范；产品介绍与 `pnpm` 命令见 `README-zh_CN.md`。
 
-- Astro 生成不带末尾斜杠的静态路由，`zh-CN` 为无前缀默认语言，英文位于 `/en`；使用默认根级 `src/`、`public/` 目录，只发布 `dist/`。
-- 每个页面和语言各有一个薄入口，共用布局与页面组件。`src/locales/{zh-CN,en}.json` 是唯一界面文案源；构建时校验两种语言的键、类型和插值参数，缺失键不得回退到另一种语言。
-- 语言以 URL 为准，导航使用普通链接；页面链接与 `hreflang` 由 `astro:i18n` 生成。`src/i18n/routes.js` 映射页面标识，`src/i18n/translations.js` 管理文案并使用 `BASE_URL` 生成静态资源地址，支持 Pages 子路径。
-- 更新日志与首页下载链接在构建时读取双语发布快照。界面文案来自 locale JSON，版本说明来自应用已确认的 changelogs。生产快照必须查询最新已发布 Release，并按其 tag 从 CleanU 代码库根目录读取 changelogs.json；每次 Astro 构建后恢复并校验唯一最新稳定版 DMG，再输出公开 appcast。浏览器不请求 GitHub 或翻译 API，历史日志不含旧下载链接。自动事件不递增官网版本；全部部署必须走完整 Publish 工作流。
+## 架构
 
-- 发布代码只保留 `src/data/releases.js` 本地数据模块与 `scripts/releases.js` 执行脚本。Astro 页面引用前者；后者通过 `release:sync`、`release:assets`、`release:check` 分别同步、恢复产物和部署校验，不拆分仅作转发的入口文件。
+- Astro 静态路由不带末尾斜杠：`zh-CN` 无前缀，英文在 `/en`；使用根级 `src/`、`public/`，只发布 `dist/`。
+- 每页每语言一个薄入口，共用布局与页面组件；`src/locales/{zh-CN,en}.json` 是唯一界面文案源，构建时校验键、类型与插值参数，缺失键不得回退到另一种语言。
+- 语言以 URL 为准，导航用普通链接；页面链接与 `hreflang` 由 `astro:i18n` 生成，`src/i18n/routes.js` 映射页面标识，`src/i18n/translations.js` 管理文案并用 `BASE_URL` 生成资源地址，兼容 Pages 子路径。
+
+## 发布数据
+
+- 首页下载与更新日志在构建时读取双语发布快照：文案来自 locale JSON，版本说明来自应用已确认的 changelogs。
+- 生产快照必须查询最新已发布 Release，按其 tag 从 CleanU 应用仓库根目录读取 `changelogs.json`，构建后恢复并校验唯一最新稳定版 DMG 再输出 appcast；浏览器不请求 GitHub 或翻译 API，历史日志不含旧下载链接。
+- 自动事件不递增官网版本，部署只走完整 Publish 工作流。
+- 发布代码只保留 `src/data/releases.js` 与 `scripts/releases.js`：页面引用前者，后者提供 `release:sync` / `release:assets` / `release:check`，不拆分仅作转发的入口文件。
+
+## 开发服务
+
+- 修改界面、文案或样式后，自动启动开发服务（`pnpm dev`，http://localhost:4321），在浏览器校验受影响页面（中英、明暗）；服务已在运行则复用，避免重复占用端口。
+- 本地默认无发布数据，更新日志显示空状态，样式与文案校验不受影响；需要真实数据时，启动前用 `CLEANU_RELEASES_FILE=<发布清单路径> pnpm dev` 指向一份应用仓库的 `changelogs.json`，路径按本机环境提供，不写死其它工程位置。本地无下载产物，下载链接 404 属正常。
+- 交付时保持服务运行，并给出可访问的页面链接。
