@@ -1,3 +1,26 @@
+import { compareVersions, isReleaseVersion } from '../../common/release-version.js'
+
+const release = document.querySelector('[data-release-version]')
+const updateDot = release?.querySelector('[data-release-update]')
+const RELEASE_VERSION_KEY = 'cleanu:seen-release-version'
+
+window.addEventListener('pageshow', () => {
+  if (!updateDot) return
+  updateDot.hidden = true
+
+  const version = release.dataset.releaseVersion
+  try {
+    const seenVersion = localStorage.getItem(RELEASE_VERSION_KEY)
+    const hasSeenVersion = isReleaseVersion(seenVersion)
+    if (hasSeenVersion && compareVersions(version, seenVersion) <= 0) return
+
+    localStorage.setItem(RELEASE_VERSION_KEY, version)
+    updateDot.hidden = !hasSeenVersion
+  } catch {
+    // The update indicator is optional when browser storage is unavailable.
+  }
+})
+
 ;(function () {
   'use strict'
 

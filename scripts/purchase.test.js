@@ -10,13 +10,14 @@ const config = {
 };
 const context = { siteUrl: 'https://cleanu.ls63.cc/' };
 
-test('routine checks stay out of pricing copy while purchase terms disclose online verification', async () => {
+test('privacy copy discloses automatic verification without exposing check timing', async () => {
+  const checkTiming = /七天|7\s*天|seven days|7 days|每日|daily|24\s*(小时|hours)/i;
   for (const locale of ['zh-CN', 'en']) {
     const copy = JSON.parse(await readFile(new URL(`../src/locales/${locale}.json`, import.meta.url), 'utf8'));
-    assert.doesNotMatch(JSON.stringify(copy.index), /七天|seven days|每日|daily|24 hours/i);
-    assert.doesNotMatch(JSON.stringify(copy.privacy), /七天|seven days|每日|daily|24 hours/i);
-    assert.match(copy.terms.licenseBody, /联网验证|online verification/i);
-    assert.doesNotMatch(copy.terms.licenseBody, /每日|daily|24/);
+    assert.doesNotMatch(JSON.stringify(copy.index), checkTiming);
+    assert.doesNotMatch(JSON.stringify(copy.terms), checkTiming);
+    assert.doesNotMatch(JSON.stringify(copy.privacy), checkTiming);
+    assert.match(copy.privacy.licenseBody, /定期自动联网验证|automatic online license checks at regular intervals/i);
   }
 });
 

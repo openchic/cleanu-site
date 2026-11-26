@@ -56,6 +56,11 @@
 - **WHEN** 访问者禁用 JavaScript 并用键盘激活语言切换链接
 - **THEN** 浏览器打开当前逻辑页面的另一种语言版本
 
+#### Scenario: Returning home via the brand link
+
+- **WHEN** 访问者点击页脚或导航栏的 CleanU 品牌链接
+- **THEN** 浏览器打开当前语言的首页，若已在首页则回到页首
+
 ### Requirement: URL is the language authority
 
 页面语言 SHALL 由访问的页面 URL 决定。浏览器语言与已保存的主题或其他偏好 MUST NOT 改写该页面语言，也 MUST NOT 将访问者自动跳转到另一种语言页面。刷新和直接分享 URL SHALL 保持同一种语言。
@@ -72,7 +77,9 @@
 
 ### Requirement: Localized runtime translations and dates
 
-主题提示、日志空状态和最新版本标签 SHALL 使用当前页面语言。发布日期 SHALL 在构建时按 locale 与 UTC 格式化。首页 SHALL 提供唯一的静态最新通用包链接，支持部署子路径，不探测硬件或请求 GitHub API。尚无本地记录时，开发页面 SHALL 使用站内日志入口；正式部署 SHALL 拒绝空记录。
+主题提示、日志空状态和下载按钮 SHALL 使用当前页面语言。更新日志 SHALL 以竖向时间线连接相邻版本，仅在最新稳定版本号旁提供下载按钮，日期显示在版本号下方。发布日期 SHALL 在构建时按 locale 与 UTC 格式化。首页和更新日志 SHALL 引用同一最新通用包，支持部署子路径，不探测硬件或请求 GitHub API。尚无本地记录时，首页下载按钮 SHALL 链接站内日志入口，日志 SHALL 显示空状态；正式部署 SHALL 拒绝空记录。
+
+更新日志时间线 SHALL 向辅助技术保留列表语义。通过版本锚点进入或跳转时，当前定位的版本号 SHALL 显示下划线。
 
 #### Scenario: Reading localized release notes
 
@@ -172,19 +179,43 @@ CleanU 发布成功后 SHALL 发送仅包含 tag 的 cleanu-release 事件。官
 
 ### Requirement: Latest-only Pages distribution
 
-每次正式部署 SHALL 在 Astro 构建后从私有 GitHub Release 恢复并校验最新稳定版本的唯一 DMG，输出 downloads/{version}/{filename} 与 updates/appcast.json。首页与 appcast MUST 引用相同文件，兼容 universal/arm64/x86_64 键。Pages SHALL 仅保留最新 DMG，历史日志 SHALL NOT 提供过期下载链接。凭据及私有附件 URL MUST NOT 进入静态产物。生产部署 SHALL 串行执行并在部署前检查数据修订，拒绝版本降级或同版本校验值变化。
+每次正式部署 SHALL 在 Astro 构建后从私有 GitHub Release 恢复并校验最新稳定版本的唯一 DMG，输出 downloads/{version}/{filename} 与 updates/appcast.json。首页、更新日志与 appcast MUST 引用相同文件，兼容 universal/arm64/x86_64 键。Pages SHALL 仅保留最新 DMG，历史日志 SHALL NOT 提供过期下载链接。凭据及私有附件 URL MUST NOT 进入静态产物。生产部署 SHALL 串行执行并在部署前检查数据修订，拒绝版本降级或同版本校验值变化。
 
 新包文件名 SHALL 为 CleanU-{version}.dmg。读取和恢复时 SHALL 使用已发布 JSON 的实际文件名，并继续接受此前的 CleanU-{version}-universal.dmg；SHALL NOT 因官网重建而重命名已发布包或改写其下载地址。
 
 #### Scenario: Deploying a new app version
 
 - **WHEN** 新版本的完整站点与 DMG 校验通过并部署成功
-- **THEN** 首页和 appcast 指向新 DMG，旧 DMG 不进入本次部署，历史日志仍可阅读
+- **THEN** 首页、更新日志和 appcast 指向新 DMG，旧 DMG 不进入本次部署，历史日志仍可阅读
 
 #### Scenario: Blocking incomplete deployment
 
 - **WHEN** 凭据缺失、持久化数据缺失、文件恢复失败、校验不符、单文件超过 25 MiB，或构建数据已过期
 - **THEN** 不执行 Pages 部署，线上上一份完整站点与下载保持可用
+
+### Requirement: 首页下载版本与回访提示
+
+中英文首页 SHALL 在下载按钮下方依次展示价格、一次买断、永久更新、macOS 系统要求和 `v{version}`。版本号与 DMG 链接 MUST 来自同一条最新稳定版发布记录。圆点 SHALL 位于版本号右上角，在明暗主题中均使用青绿色，使用当前页面语言提供辅助技术标签，视觉上不显示文字。官网 SHALL 仅在浏览器本地保存已见版本，供中英文首页共用。
+
+#### Scenario: 首次访问和回访同一版本
+
+- **WHEN** 浏览器首次打开有发布数据的首页，或再次打开已见版本
+- **THEN** 首页显示版本号和下载链接，首次访问记录版本，两个场景均不显示圆点
+
+#### Scenario: 回访时官网提供更高版本
+
+- **WHEN** 首页提供的稳定版本高于浏览器已记录的版本
+- **THEN** 在版本号右上角显示圆点并更新本地记录，下一次打开同一版本时省略圆点
+
+#### Scenario: 从首页查看当前版本的更新日志
+
+- **WHEN** 访问者点击或用键盘激活首页的版本号链接
+- **THEN** 浏览器打开当前语言的更新日志，定位到该版本的条目。禁用 JavaScript 时链接仍可使用
+
+#### Scenario: 发布数据或浏览器存储不可用
+
+- **WHEN** 没有发布记录，或 JavaScript 或浏览器存储不可用
+- **THEN** 没有发布记录时省略版本号、前置分隔点和圆点，下载按钮链接至对应语言的更新日志。只有脚本或存储不可用时，静态版本号和 DMG 链接仍可使用，圆点省略
 
 ### Requirement: 官网手动发布收尾
 

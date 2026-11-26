@@ -371,7 +371,7 @@ h3 { font-size: 1.06rem; letter-spacing: -0.01em; }
 .foot {
   flex-shrink: 0;
   border-top: 1px solid var(--line);
-  padding-block: var(--sp-9) var(--sp-6);
+  padding-block: var(--sp-8);
 }
 .foot__inner {
   display: grid;

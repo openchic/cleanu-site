@@ -83,6 +83,40 @@
   font-size: 0.75rem;
   color: var(--ink-3);
 }
+.hero__meta-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  white-space: nowrap;
+}
+.hero__meta-group--purchase {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.hero__version {
+  position: relative;
+  padding-inline-end: 0.5rem;
+}
+.hero__version:any-link {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+.hero__version:hover,
+.hero__version:focus-visible { color: var(--accent-ink); }
+.hero__version-dot {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inline-size: 0.375rem;
+  block-size: 0.375rem;
+  border-radius: 50%;
+  background: #438b76;
+}
+@media (max-width: 520px) {
+  .hero__meta { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+  .hero__meta-group { gap: var(--sp-2); }
+  .hero__meta-divider { display: none; }
+}
 
 /* 真实界面截图 */
 .shot {
@@ -363,6 +397,7 @@ html:not(.has-js) .faq__q::after { display: none; }
   .pricing__note { font-size: 0.875rem; }
   .pricing__value { font-size: 4rem; }
   .pricing { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .pricing:lang(zh-CN) { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
   .pricing__terms { justify-items: start; text-align: left; }
   .pricing__terms p { max-width: none; }
 }
@@ -390,6 +425,9 @@ html:not(.has-js) .faq__q::after { display: none; }
 @media (max-width: 620px) {
   .hero + .section { padding-top: var(--sp-8); }
   .hero__actions .btn { flex: 1 1 100%; }
+  .pricing__actions { max-width: 100%; }
+  .hero__actions .btn,
+  .pricing__actions .btn { white-space: normal; }
   .show__stage { aspect-ratio: 4 / 3; border-radius: var(--radius); }
   .tabs { width: 100%; }
   .tabs button { padding: var(--sp-2) 0; }

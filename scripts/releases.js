@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { compareVersions, downloadPath, loadReleases, maxAssetSize, normalizeReleases } from '../src/data/releases.js';
+import { compareVersions } from '../src/common/release-version.js';
+import { downloadPath, loadReleases, maxAssetSize, normalizeReleases } from '../src/data/releases.js';
 import { resolveSiteUrl } from './localization.js';
 
 const appRepository = 'openchic/cleanu';

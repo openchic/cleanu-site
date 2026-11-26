@@ -1,5 +1,5 @@
 ---
-import { loadReleases, downloadPath } from '../../data/releases.js';
+import { downloadPath, loadReleases, releaseId } from '../../data/releases.js';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { assetHref, pageHref, translationsFor } from '../../i18n/translations.js';
 import { checkedPurchaseConfig, checkoutHref } from '../../data/purchase.js';
@@ -8,7 +8,8 @@ import './home.css';
 const { locale } = Astro.props;
 const translations = translationsFor(locale);
 const latestRelease = (await loadReleases())[0];
-const downloadHref = latestRelease ? assetHref(downloadPath(latestRelease)) : pageHref('changelog', locale);
+const changelogHref = pageHref('changelog', locale);
+const downloadHref = latestRelease ? assetHref(downloadPath(latestRelease)) : changelogHref;
 const purchase = await checkedPurchaseConfig();
 const purchaseHref = purchase.enabled ? checkoutHref(purchase, process.env.SITE_URL, locale) : null;
 ---
@@ -28,9 +29,31 @@ const purchaseHref = purchase.enabled ? checkoutHref(purchase, process.env.SITE_
           {purchaseHref
             ? <a class="btn btn--primary" href={purchaseHref} rel="noreferrer">{translations.index.pricingBuy}</a>
             : <button class="btn btn--primary" type="button" disabled title={translations.index.pricingClosed}>{translations.index.pricingClosed}</button>}
-          <a class="btn btn--ghost" href={downloadHref} data-download>{translations.index.download}</a>
+          <a class="btn btn--ghost" href={downloadHref} data-download>{translations.common.download}</a>
         </div>
-        <p class="hero__meta"><span>{translations.index.pricingPrice}</span><span aria-hidden="true">·</span><span>{translations.index.pricingBuyout}</span><span aria-hidden="true">·</span><span>{translations.index.systemRequirement}</span><span aria-hidden="true">·</span><span>{translations.index.lifetimeUpdates}</span></p>
+        <p class="hero__meta">
+          <span class="hero__meta-group hero__meta-group--purchase">
+            <span>{translations.index.pricingPrice}</span>
+            <span class="hero__meta-group">
+              <span aria-hidden="true">·</span>
+              <span>{translations.index.pricingBuyout}</span>
+            </span>
+            <span class="hero__meta-group">
+              <span aria-hidden="true">·</span>
+              <span>{translations.index.lifetimeUpdates}</span>
+            </span>
+          </span>
+          <span class="hero__meta-divider" aria-hidden="true">·</span>
+          <span class="hero__meta-group">
+            <span>{translations.index.systemRequirement}</span>
+            {latestRelease && <>
+              <span aria-hidden="true">·</span>
+              <a class="hero__version" href={`${changelogHref}#${releaseId(latestRelease.version)}`} data-release-version={latestRelease.version}>
+                v{latestRelease.version}<span class="hero__version-dot" data-release-update role="img" aria-label={translations.index.releaseUpdate} hidden></span>
+              </a>
+            </>}
+          </span>
+        </p>
       </div>
 
     </div>

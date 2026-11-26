@@ -7,10 +7,10 @@ const { page, locale, translations } = Astro.props;
 <footer class="foot">
   <div class="shell foot__inner">
     <div class="foot__brand">
-      <span class="brand brand--foot">
+      <a class="brand brand--foot" href={page === 'index' ? '#top' : pageHref('index', locale)}>
         <img class="brand__mark" src={assetHref('assets/icon.webp')} width="512" height="512" alt="">
         <span>CleanU</span>
-      </span>
+      </a>
       <p>{translations.tagline}</p>
     </div>
     <nav class="foot__links" aria-label={translations.support}>

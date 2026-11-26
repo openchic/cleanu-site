@@ -1,16 +1,8 @@
 import { readFile } from 'node:fs/promises';
+import { compareVersions, isReleaseVersion } from '../common/release-version.js';
 import snapshot from './changelogs.json' with { type: 'json' };
 
 export const maxAssetSize = 25 * 1024 * 1024;
-
-/** Compare stable, canonical three-part versions numerically. */
-export function compareVersions(first, second) {
-  for (let index = 0; index < 3; index += 1) {
-    const difference = Number(first.split('.')[index]) - Number(second.split('.')[index]);
-    if (difference) return Math.sign(difference);
-  }
-  return 0;
-}
 
 /** Validate the persistent contract and discard fields not intended for publication. */
 export function normalizeReleases(records) {
@@ -18,8 +10,7 @@ export function normalizeReleases(records) {
   const versions = new Set();
   const normalized = records.map((record) => {
     const version = record?.version;
-    if (typeof version !== 'string' || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)
-      || version.split('.').some((part) => !Number.isSafeInteger(Number(part)))
+    if (!isReleaseVersion(version)
       || typeof record.published_at !== 'string' || !Number.isFinite(Date.parse(record.published_at))) {
       throw new Error('Invalid published Release data');
     }
@@ -53,6 +44,11 @@ export function normalizeReleases(records) {
 /** Astro only reads local data; development can use an explicitly supplied fixture. */
 export async function loadReleases(file = process.env.CLEANU_RELEASES_FILE) {
   return normalizeReleases(file ? JSON.parse(await readFile(file, 'utf8')) : snapshot);
+}
+
+/** Use the same changelog anchor on the home page and the release list. */
+export function releaseId(version) {
+  return `release-v${version}`;
 }
 
 /** A versioned path is used by static home links and the public appcast. */
