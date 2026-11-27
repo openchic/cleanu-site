@@ -43,8 +43,12 @@ export function validateTranslations(translationsByLocale) {
   }
 }
 
-/** Local builds may omit SITE_URL; publication requires a public HTTPS URL, including its base path. */
-export function resolveSiteUrl(value, required = false) {
+export function isLoopbackHost(host) {
+  return ['localhost', '127.0.0.1', '[::1]'].includes(host);
+}
+
+/** Publication requires a public HTTPS URL. Development may explicitly allow loopback. */
+export function resolveSiteUrl(value, required = false, { allowLoopback = false } = {}) {
   if (!value) {
     if (required) throw new Error('SITE_URL is required for publication');
     return null;
@@ -53,7 +57,9 @@ export function resolveSiteUrl(value, required = false) {
   try { url = new URL(value); } catch { throw new Error(`Invalid SITE_URL: ${value}`); }
   const host = url.hostname.toLowerCase();
   const forbidden = /(^|\.)(localhost|local|test|invalid|example)$/.test(host) || /(^|\.)example\.(com|org|net)$/.test(host);
-  if (url.protocol !== 'https:' || !host.includes('.') || forbidden || /^[\d.]+$/.test(host) || host.includes(':') || url.username || url.password || url.search || url.hash) {
+  const publicHttps = url.protocol === 'https:' && host.includes('.') && !forbidden && !/^[\d.]+$/.test(host) && !host.includes(':');
+  const loopback = allowLoopback && isLoopbackHost(host) && ['http:', 'https:'].includes(url.protocol);
+  if ((!publicHttps && !loopback) || url.username || url.password || url.search || url.hash) {
     throw new Error(`SITE_URL must be a public HTTPS URL without credentials, query or fragment: ${value}`);
   }
   url.pathname = `${url.pathname.replace(/\/+$/, '')}/`;

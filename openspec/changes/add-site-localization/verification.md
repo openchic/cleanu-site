@@ -90,3 +90,29 @@
 - 临时工程中实际执行新 sync/assets/check CLI，使用替身 API 和已有真实 Universal DMG；缺失 token 保留快照，损坏包保留原文件，修订过期和降级均失败。
 - 连续两次干净构建分别输出根路径与 /site/ 子路径的八页静态 HTML，并恢复同一份校验通过的最新 DMG；双语正文、站内链接、首页下载与公开 appcast 路径一致。
 - 应用 workflow 的 PR 文案、summary 和 gh tag 通知用替身命令实跑；此前的手动补发校验拒绝草稿和非法版本，该入口现已移除，手动刷新统一走官网 Publish。没有真实模型请求、GitHub 发布或 Cloudflare 部署。
+
+## 抓取发现与结构化元数据（2026-11-26）
+
+- 可索引页面在 `<head>` 输出 canonical、x-default 与一段 JSON-LD（Organization、WebSite、WebPage，首页另含 SoftwareApplication 与 FAQPage）。字段只取页面可见文案和首页下载按钮使用的同一条发布记录；不输出 offers，不读取购买配置；无 `SITE_URL` 时全部省略。
+- `robots.txt` 与 `sitemap.xml` 由 `astro:build:done` 钩子与 `_headers` 一起写出。站点地图只含五个可索引页面的中英地址共十条，带 `x-default`，不含 `lastmod`、`changefreq`、`priority`；无 `SITE_URL` 时 robots 不声明 Sitemap 且不生成站点地图。
+- 新增单页双语的 `404.html`，不输出 canonical、结构化数据和语言关联。此前 Cloudflare Pages 缺少 404 页时对未知路径返回首页和 200 状态，部署后将改由它返回 404。
+- 验证：`pnpm test` 35 项通过（新增 8 项发现模块测试）。根路径、`/cleanu-site/` 子路径和无 `SITE_URL` 三种构建均通过 `pnpm site:check`，覆盖 12 个页面、404、robots 与站点地图，并逐条比对 canonical、hreflang 与站点地图地址。
+- 以 HEAD 归档构建和双语发布夹具（`CLEANU_RELEASES_FILE`）对比，改动前后 12 个页面的 `<body>` 逐字节一致；结构化数据的 `softwareVersion` 与 `downloadUrl` 和首页版本号及下载链接一致。空快照构建按规格省略这两个字段。
+- 无头 Chrome 检查了首页中英 head、404 页明暗主题与 360px 布局。Node 测试已统一迁到根级 `tests/`。
+- 未进行线上部署。Cloudflare 后台的 AI 爬虫拦截与托管 robots.txt 设置无法从代码验证，部署后需确认两者均未开启。
+- 收紧 `x-default` 的输出范围后，重新构建了根路径、`/cleanu-site/` 子路径及未设置 `SITE_URL` 的版本，三种产物均通过 `pnpm site:check`。已设置 `SITE_URL` 时，中英文购买回跳页各保留两个语言关联，可索引页各包含三个语言关联。
+
+## 发布成功后持久化更新日志快照（2026-11-27）
+
+- 官网 `src/data/changelogs.json` 已用 CleanU 当前 `origin/main` 所含的已发布双语记录初始化，包括 `v0.2.0` 与 `v0.1.0`；本地开发只读取官网仓库快照。
+- `release:sync` 将公开字段写入该快照，并将最新 DMG 附件 ID 与发布修订号放入被忽略的 `.release-revision.json`。`release:assets` 从临时文件取附件 ID。
+- `pnpm dev` 只读取当前官网工作区的快照，不自动 fetch/pull；发布工作流推送新快照后，本地先更新官网 `main` 即可读取。
+- `node --check`、快照 JSON/版本/无附件 ID 校验与 `git diff --check` 通过。浏览器刷新 `http://localhost:4321/changelog` 后显示两个版本及对应双语记录。
+- 本地没有执行真实 GitHub Release 同步或 Cloudflare Pages 部署；部署后的远端快照提交留待下一次发布工作流验证。
+- 两种发布入口共用最后的日志同步步骤。用临时 Git 仓库和本地 Contents API 替身执行工作流中的命令，核对手动版本 tag 仅更新 package.json、main 前进后仍能写入本次部署的日志、重复执行相同日志跳过提交。已检查工作流成功条件和 shell 语法，34 项 Node 测试通过。
+- Review 修复后，35 项 Node 测试通过。用默认快照完成根路径与子路径构建，中英文首页与日志均包含已发布版本。无 `SITE_URL` 的空清单构建通过校验。用空产物配非空快照、修改站点地图单条英文链接，两种情况均被 `site:check` 拒绝。
+
+## 404 按路径显示语言
+
+- 本地开发服务的中文和英文未知路径都返回 HTTP 404。浏览器在明暗主题下分别显示对应语言，返回链接分别指向 `/` 和 `/en`。
+- 根路径和子路径的静态构建及 `site:check` 均通过，各生成一份中文和英文 404。

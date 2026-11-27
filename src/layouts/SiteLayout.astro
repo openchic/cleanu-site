@@ -1,19 +1,26 @@
 ---
 import '../styles/site.css';
-import { getAbsoluteLocaleUrl } from 'astro:i18n';
 import SiteHeader from '../components/SiteHeader/index.astro';
 import SiteFooter from '../components/SiteFooter/index.astro';
-import { assetHref, pageRoute, runtimeTranslationsFor } from '../i18n/translations.js';
+import { absoluteUrls, assetHref, runtimeTranslationsFor } from '../i18n/translations.js';
+import { hasHreflang, isIndexablePage, siteLocales } from '../i18n/routes.js';
+import { baseNodes, serializeStructuredData } from '../data/structured-data.js';
 
-const { page, locale, translations } = Astro.props;
+const { page, locale, translations, structuredData = [] } = Astro.props;
 const pageTranslations = translations[page];
-const alternateLocales = ['zh-CN', 'en'];
-const alternates = Astro.site
-  ? alternateLocales.map((alternateLocale) => ({
-      locale: alternateLocale,
-      href: getAbsoluteLocaleUrl(alternateLocale, pageRoute(page)),
-    }))
+const isIndexable = isIndexablePage(page);
+const urls = absoluteUrls();
+const canonical = urls && isIndexable ? urls.page(locale, page) : null;
+const alternates = urls && hasHreflang(page)
+  ? siteLocales.map((alternateLocale) => ({
+    locale: alternateLocale,
+    href: urls.page(alternateLocale, page),
+  }))
   : [];
+if (urls && isIndexable) {
+  alternates.push({ locale: 'x-default', href: urls.page('zh-CN', page) });
+}
+const graph = [...baseNodes({ locale, page, translations, urls }), ...structuredData].filter(Boolean);
 const runtimeTranslations = runtimeTranslationsFor(translations);
 ---
 
@@ -36,11 +43,13 @@ const runtimeTranslations = runtimeTranslationsFor(translations);
       </script>
     </>}
     <title>{pageTranslations.title}</title>
-    <meta name="description" content={pageTranslations.description}>
+    {pageTranslations.description && <meta name="description" content={pageTranslations.description}>}
+    {canonical && <link rel="canonical" href={canonical}>}
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#121514" media="(prefers-color-scheme: dark)">
     {alternates.map(({ locale: alternateLocale, href }) => <link rel="alternate" hreflang={alternateLocale} href={href} />)}
     <link rel="icon" href={assetHref('favicon.svg')} type="image/svg+xml">
+    {graph.length > 0 && <script is:inline type="application/ld+json" set:html={serializeStructuredData(graph)} />}
     <script is:inline>
       document.documentElement.classList.add('has-js');
       try {

@@ -133,6 +133,63 @@
 - **WHEN** 构建发现缺少预期页面、站内链接目标或静态资源
 - **THEN** 构建失败并报告问题目标，不生成看似成功但无法导航的发布包
 
+#### Scenario: Serving an unknown address
+
+- **WHEN** 访问者打开站点上不存在的地址
+- **THEN** 站点返回 404 状态。`/en/` 下的未知路径只显示英文，其他未知路径只显示中文。页头的语言链接指向另一种语言的 404，正文返回链接指向当前语言的首页。
+
+### Requirement: Canonical and default-language links
+
+每个可索引页面 SHALL 提供指向自身公开地址的 `canonical`，并在现有 `hreflang` 之外提供指向默认中文页面的 `x-default`。购买回跳页与 404 页面 MUST NOT 输出 `canonical` 或 `x-default`。这些地址与 `hreflang` 一样 MUST 使用实际部署站点的完整公开 URL 并包含部署子路径。无法确定公开站点地址时 SHALL 省略这些字段。
+
+#### Scenario: Publishing under a repository subpath
+
+- **WHEN** 站点发布到带子路径的公开地址
+- **THEN** 可索引页面的 `canonical` 和 `x-default` 包含该子路径，并与同页的 `hreflang` 地址一致
+
+#### Scenario: Publishing the purchase return pages
+
+- **WHEN** 用有效的 `SITE_URL` 构建中英文购买回跳页
+- **THEN** 两页保留 `noindex` 和指向两种语言回跳地址的 `hreflang`，并省略 `canonical` 和 `x-default`
+
+#### Scenario: Building without a public site address
+
+- **WHEN** 本地构建没有设置 `SITE_URL`
+- **THEN** 页面省略 `canonical` 和 `x-default`，站内链接和正文不受影响
+
+### Requirement: Machine-readable page identity
+
+可索引页面 SHALL 在 `<head>` 中输出一段 JSON-LD，全站包含组织、站点和当前页面，首页另含软件产品与 FAQ。所有字段 MUST 取自同一页面已有的可见文案，或首页下载按钮使用的同一条最新稳定版发布记录；结构化数据 SHALL NOT 包含页面未展示的价格、评分、购买或下载信息。页面源码 MUST NOT 读取购买配置来生成结构化数据。
+
+#### Scenario: Reading the home page as a software product
+
+- **WHEN** 搜索引擎或 AI 抓取任一语言的首页
+- **THEN** 结构化数据中的名称、描述、系统要求、版本号和下载地址与该页面的可见内容及下载链接一致
+
+#### Scenario: Building without release records
+
+- **WHEN** 首页没有发布记录
+- **THEN** 结构化数据保留产品名称、描述和系统要求，省略版本号和下载地址，与首页省略版本号的行为一致
+
+#### Scenario: Keeping private purchase configuration out of the output
+
+- **WHEN** 构建生成任意页面
+- **THEN** 结构化数据不含价格，也不含购买配置中的商品或支付链接
+
+### Requirement: Crawler discovery files
+
+每次构建 SHALL 输出允许全站抓取的 `robots.txt`；确定公开站点地址时 SHALL 同时输出 `sitemap.xml`，并在 `robots.txt` 中声明其绝对地址。站点地图 MUST 只列出可索引页面的两种语言版本及对应语言关联，MUST NOT 列出购买回跳页和 404 页面，也 MUST NOT 包含无法保证准确的 `lastmod`、`changefreq` 或 `priority`。站点地图的每条语言关联 MUST 与对应页面的 `hreflang` 一致。
+
+#### Scenario: Discovering the site from robots.txt
+
+- **WHEN** 抓取工具读取 `robots.txt`
+- **THEN** 得到全站抓取许可；确定公开站点地址时还得到站点地图地址，站点位于子路径时该地址包含子路径
+
+#### Scenario: Counting the sitemap entries
+
+- **WHEN** 读取 `sitemap.xml`
+- **THEN** 其中正好列出五个可索引页面的中英文地址，共十条
+
 ### Requirement: Responsive localized controls
 
 中英文页面 SHALL 在桌面与移动端保持语言切换入口和导航可用，不因英文文案产生页面水平溢出。产品预览标签 MUST 保持等宽，选中滑块 MUST 与当前标签对齐，键盘切换与既有减动效行为 SHALL 继续可用。
@@ -149,7 +206,7 @@
 
 ### Requirement: Existing visual design and interactions are preserved
 
-Astro 重构 MUST 保留现有页面的视觉风格、布局、排版、颜色令牌、页面专属样式和控件外观。中英文版本 MUST 共用对应页面的视觉规则；路由和组件组织按 Astro 约定实现，现有页面功能仍须可用。项目 MUST 使用根级默认 `src/` 和 `public/` 目录；`src/pages/` 只存放 Astro 路由入口，页面专属脚本和样式与对应组件同目录，共享浏览器模块放在 `src/common/`，使用方直接引用所需模块；运行时翻译读取与全站交互初始化 MUST 分离，不保留没有调用方的转发入口。全站共享样式放在 `src/styles/site.css`。页面源码使用的路由与资源路径辅助 MUST 放在 `src/i18n/`；构建期文案与发布地址校验及其测试 MUST 放在根级 `scripts/`，不得混入生成产物目录。旧 `web/` 目录及 Vite 专用配置和入口生成器 MUST 移除。
+Astro 重构 MUST 保留现有页面的视觉风格、布局、排版、颜色令牌、页面专属样式和控件外观。中英文版本 MUST 共用对应页面的视觉规则；路由和组件组织按 Astro 约定实现，现有页面功能仍须可用。项目 MUST 使用根级默认 `src/` 和 `public/` 目录；`src/pages/` 只存放 Astro 路由入口，页面专属脚本和样式与对应组件同目录，共享浏览器模块放在 `src/common/`，使用方直接引用所需模块；运行时翻译读取与全站交互初始化 MUST 分离，不保留没有调用方的转发入口。全站共享样式放在 `src/styles/site.css`。页面源码使用的路由与资源路径辅助 MUST 放在 `src/i18n/`；构建期文案与发布地址校验 MUST 放在根级 `scripts/`，其 Node 测试 MUST 放在根级 `tests/`，不得混入生成产物目录。旧 `web/` 目录及 Vite 专用配置和入口生成器 MUST 移除。
 
 #### Scenario: Viewing pages after the framework migration
 

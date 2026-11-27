@@ -178,5 +178,11 @@
     "disclaimerBody": "To the extent permitted by law, CleanU is provided as is without a warranty that scan results are complete, accurate, or fit for a particular purpose. CleanU is not liable for indirect or consequential losses arising from use or inability to use the software. Review selected items and back up important data before cleanup.",
     "ipTitle": "Intellectual Property",
     "ipBody": "The CleanU software, name, marks, icons, and website content are protected by intellectual property rights. A personal license for an official release grants only the right to use the software; it does not transfer any related intellectual property rights."
+  },
+  "notFound": {
+    "title": "Page not found · CleanU",
+    "heading": "Page not found",
+    "body": "The page you’re looking for doesn’t exist. It may have been moved or removed.",
+    "home": "Back to home"
   }
 }

@@ -1,4 +1,3 @@
-export const pageNames = ['index', 'changelog', 'privacy', 'support', 'checkout', 'terms'];
 const pageRoutes = {
   index: '',
   changelog: 'changelog',
@@ -6,11 +5,30 @@ const pageRoutes = {
   support: 'support',
   checkout: 'purchase/complete',
   terms: 'purchase-terms',
+  notFound: '404',
 };
+
+export const siteLocales = ['zh-CN', 'en'];
+export const pageNames = Object.keys(pageRoutes);
+
+/** Error pages have language navigation but no alternate links in the document head. */
+export function hasHreflang(page) {
+  return Object.hasOwn(pageRoutes, page) && page !== 'notFound';
+}
+
+/** Only localized content pages belong in search metadata and the sitemap. */
+export function isIndexablePage(page) {
+  return hasHreflang(page) && page !== 'checkout';
+}
 
 export function pageRoute(page) {
   if (!Object.hasOwn(pageRoutes, page)) throw new Error(`Unknown site page: ${page}`);
   return pageRoutes[page];
+}
+
+export function localizedRoute(locale, page) {
+  if (!siteLocales.includes(locale)) throw new Error(`Unsupported site locale: ${locale}`);
+  return [locale === 'en' ? 'en' : '', pageRoute(page)].filter(Boolean).join('/');
 }
 
 export function normalizeBasePath(base = '/') {

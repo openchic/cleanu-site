@@ -1,7 +1,9 @@
-import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getAbsoluteLocaleUrl, getRelativeLocaleUrl } from 'astro:i18n';
 import english from '../locales/en.json';
 import chinese from '../locales/zh-CN.json';
 import { assetHref as createAssetHref, pageRoute } from './routes.js';
+
+const site = import.meta.env.SITE;
 
 const translationsByLocale = {
   'zh-CN': chinese,
@@ -25,6 +27,15 @@ export function pageHref(page, locale) {
 
 export function assetHref(path) {
   return createAssetHref(path, import.meta.env.BASE_URL);
+}
+
+/** Public addresses exist only when the build knows its site URL. */
+export function absoluteUrls() {
+  if (!site) return null;
+  return {
+    page: (locale, page) => getAbsoluteLocaleUrl(locale, pageRoute(page)),
+    asset: (path) => new URL(assetHref(path), site).href,
+  };
 }
 
 export function runtimeTranslationsFor(translations) {

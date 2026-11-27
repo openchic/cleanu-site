@@ -7,6 +7,8 @@
 - Astro 静态路由不带末尾斜杠：`zh-CN` 无前缀，英文在 `/en`；使用根级 `src/`、`public/`，只发布 `dist/`。
 - 每页每语言一个薄入口，共用布局与页面组件；`src/locales/{zh-CN,en}.json` 是唯一界面文案源，构建时校验键、类型与插值参数，缺失键不得回退到另一种语言。
 - 语言以 URL 为准，导航用普通链接；页面链接与 `hreflang` 由 `astro:i18n` 生成，`src/i18n/routes.js` 映射页面标识，`src/i18n/translations.js` 管理文案并用 `BASE_URL` 生成资源地址，兼容 Pages 子路径。
+- 抓取元数据只写入 `<head>` 和构建产物。可索引页由布局输出 `canonical`、`x-default` 与 JSON-LD，字段只取页面可见文案和首页下载使用的同一条发布记录，不读取购买配置。购买回跳页保留 `noindex` 和中英文 `hreflang`。构建钩子输出 `robots.txt` 与 `sitemap.xml`，站点地图只含十个可索引地址。中文和英文 404 分别输出到 `404.html` 和 `en/404.html`，共用路由表、语言切换和产物校验。两页省略页面头部的语言关联与结构化数据，也不进入站点地图。缺少 `SITE_URL` 时省略全部绝对地址，发布构建必须设置。
+- Node 测试统一放在根级 `tests/`（`pnpm test`）；构建期校验脚本保留在 `scripts/`。
 
 ## 发布数据
 

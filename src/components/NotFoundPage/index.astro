@@ -1,0 +1,18 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { pageHref, translationsFor } from '../../i18n/translations.js';
+
+const { locale } = Astro.props;
+const translations = translationsFor(locale);
+---
+<SiteLayout page="notFound" locale={locale} translations={translations}>
+<main id="main">
+  <section class="page" aria-labelledby="page-title">
+    <div class="shell">
+      <h1 id="page-title" class="page__title">{translations.notFound.heading}</h1>
+      <p class="lede">{translations.notFound.body}</p>
+      <p class="page__foot"><a href={pageHref('index', locale)}>{translations.notFound.home}</a></p>
+    </div>
+  </section>
+</main>
+</SiteLayout>

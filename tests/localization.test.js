@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveSiteUrl, validateTranslations } from './localization.js';
+import { resolveSiteUrl, validateTranslations } from '../scripts/localization.js';
 import { assetHref, normalizeBasePath, pageRoute, pageNames } from '../src/i18n/routes.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -45,8 +45,8 @@ test('public site URL validation preserves deployment paths', () => {
 });
 
 test('page ids map to Astro file-based routes', () => {
-  assert.deepEqual(pageNames, ['index', 'changelog', 'privacy', 'support', 'checkout', 'terms']);
-  assert.deepEqual(pageNames.map(pageRoute), ['', 'changelog', 'privacy', 'support', 'purchase/complete', 'purchase-terms']);
+  assert.deepEqual(pageNames, ['index', 'changelog', 'privacy', 'support', 'checkout', 'terms', 'notFound']);
+  assert.deepEqual(pageNames.map(pageRoute), ['', 'changelog', 'privacy', 'support', 'purchase/complete', 'purchase-terms', '404']);
   assert.throws(() => pageRoute('missing'), /Unknown site page/);
 });
 
