@@ -51,11 +51,6 @@
 .log__ver { min-width: 0; font-size: 1.3rem; line-height: var(--log-heading-line-height); letter-spacing: -0.02em; overflow-wrap: anywhere; }
 .log__ver a { color: var(--ink); }
 .log__ver a:hover { color: var(--ink-2); }
-.log__item:target .log__ver a {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-}
 .log__date { font-size: 0.75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .log__download {
   display: inline-flex;
@@ -75,7 +70,7 @@
 .log__download:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
 .log__content { min-width: 0; }
 .log__notes { color: var(--ink-2); overflow-wrap: anywhere; list-style: disc; padding-left: 1.2em; }
-.log__empty { margin-top: var(--sp-7); padding-block: var(--sp-6); border-top: 1px solid var(--line-2); color: var(--ink-2); }
+.log__empty { margin-top: var(--sp-5); color: var(--ink-2); }
 
 @media (min-width: 1024px) {
   .log__ver { font-size: 1rem; }

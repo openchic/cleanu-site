@@ -79,7 +79,7 @@
 
 主题提示、日志空状态和下载按钮 SHALL 使用当前页面语言。更新日志 SHALL 以竖向时间线连接相邻版本，仅在最新稳定版本号旁提供下载按钮，日期显示在版本号下方。发布日期 SHALL 在构建时按 locale 与 UTC 格式化。首页和更新日志 SHALL 引用同一最新通用包，支持部署子路径，不探测硬件或请求 GitHub API。尚无本地记录时，首页下载按钮 SHALL 链接站内日志入口，日志 SHALL 显示空状态；正式部署 SHALL 拒绝空记录。
 
-更新日志时间线 SHALL 向辅助技术保留列表语义。通过版本锚点进入或跳转时，当前定位的版本号 SHALL 显示下划线。
+更新日志时间线 SHALL 向辅助技术保留列表语义。通过版本锚点进入或跳转时，当前定位的版本号 SHALL 沿用普通版本号样式。
 
 #### Scenario: Reading localized release notes
 
@@ -222,7 +222,11 @@ Astro 重构 MUST 保留现有页面的视觉风格、布局、排版、颜色�
 
 页面构建 SHALL 通过本地数据模块读取快照，不包含网络请求。同步、安装包恢复和部署检查 SHALL 使用同一个发布 CLI 的独立阶段，减少包装入口且保留每阶段失败停止后续部署的行为。
 
-CleanU 发布成功后 SHALL 发送仅包含 tag 的 cleanu-release 事件。官网构建 SHALL 使用私有仓库只读凭据查询最新稳定 Release，按其 tag 读取 CleanU 根目录全量 changelogs.json，并从同一 Release 解析最新 DMG 附件 ID。SHALL NOT 使用 main 中未发布数据、release-data 分支、事件日志或 Actions 缓存作为来源。JSON 保留全部双语历史；Release 正文仅英文。重复通知 MUST 幂等，同版本产物变化 MUST 拒绝。自动同步 SHALL NOT 递增官网版本或创建官网 Release。需要手动刷新时 SHALL 运行官网 Publish，执行同一完整同步、构建和部署；手动 Publish 保留官网自身版本/tag/Release 流程。
+CleanU 发布成功后 SHALL 发送仅包含 tag 的 cleanu-release 事件。官网构建 SHALL 使用私有仓库只读凭据查询最新稳定 Release，按其 tag 读取 CleanU 根目录全量 changelogs.json，并从同一 Release 解析最新 DMG 附件 ID。CleanU 的 GitHub Release/tag 是权威来源；官网 `src/data/changelogs.json` SHALL 保存不含附件 ID 的公开字段快照，供本地开发直接读取。附件 ID 与发布修订号 SHALL 只存于被忽略的 `.release-revision.json`。SHALL NOT 使用 CleanU main 中未发布数据、release-data 分支、事件日志或 Actions 缓存作为权威来源。JSON 保留全部双语历史；Release 正文仅英文。重复通知 MUST 幂等，同版本产物变化 MUST 拒绝。自动同步 SHALL NOT 递增官网版本或创建官网 Release。两种入口 SHALL 在发布成功后将本次部署使用的快照同步到官网 `main`。发布失败或文件内容相同时 MUST NOT 提交快照。手动 Publish 在同步快照前完成官网版本、tag 和 Release 的发布。需要手动刷新时 SHALL 运行官网 Publish，执行同一完整同步、构建和部署。
+
+本地 `pnpm dev` SHALL 默认读取当前官网工作区的 `src/data/changelogs.json`，MUST NOT 查询 GitHub 或依赖 CleanU 的本地 checkout，也 MUST NOT 自动拉取或改动 Git 状态。要使用远端最新快照，开发者先更新官网 `main`。可用 `CLEANU_RELEASES_FILE` 显式指定本地测试清单。清单为空数组时 SHALL 显示空状态。
+
+部署前的产物校验 MUST 比对中英文首页的版本号、下载地址和日志页的版本列表与本次同步的快照。
 
 #### Scenario: Rebuilding only website code
 
@@ -233,6 +237,16 @@ CleanU 发布成功后 SHALL 发送仅包含 tag 的 cleanu-release 事件。官
 
 - **WHEN** 旧版本事件晚于新版本事件到达
 - **THEN** 按语义版本选择最高稳定版本，保留所有双语日志，不回退下载与 appcast
+
+#### Scenario: Persisting the catalog after deployment
+
+- **WHEN** CleanU 的新 Release 已通过完整校验并且 Pages 部署成功
+- **THEN** 官网 `main` 保存最新的公开字段快照，后续本地开发从该文件读取相同的双语日志
+
+#### Scenario: Preserving the catalog when deployment fails
+
+- **WHEN** 同步、校验或 Pages 部署任一步骤失败
+- **THEN** 官网 `main` 保留上次成功部署的快照，失败工作流不提交同步文件
 
 ### Requirement: Latest-only Pages distribution
 

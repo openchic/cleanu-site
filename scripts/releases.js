@@ -10,6 +10,14 @@ const appRepository = 'openchic/cleanu';
 const releasesFile = new URL('../src/data/changelogs.json', import.meta.url);
 const revisionFile = new URL('../.release-revision.json', import.meta.url);
 
+/** Keep GitHub-only attachment IDs out of the site's persistent public catalog. */
+function publicCatalog(releases) {
+  return releases.map(({ version, published_at, notes, asset }) => ({
+    version, published_at, notes,
+    ...(asset ? { asset: { name: asset.name, size: asset.size, sha256: asset.sha256 } } : {}),
+  }));
+}
+
 /** Request GitHub metadata without forwarding credentials to another host. */
 async function githubRequest(path, { token, fetchImpl = fetch } = {}) {
   if (!token) throw new Error('CLEANU_RELEASES_TOKEN is required to read the private Release');
@@ -135,11 +143,16 @@ async function run(command) {
   const token = process.env.CLEANU_RELEASES_TOKEN;
   if (command === 'sync') {
     const { releases, revision } = await fetchReleases({ token, expectedTag: process.env.CLEANU_RELEASE_TAG });
-    await writeFile(releasesFile, `${JSON.stringify(releases, null, 2)}\n`);
-    await writeFile(revisionFile, `${JSON.stringify({ revision })}\n`);
+    const latestAssetId = releases[0].asset.id;
+    await writeFile(releasesFile, `${JSON.stringify(publicCatalog(releases), null, 2)}\n`);
+    await writeFile(revisionFile, `${JSON.stringify({ revision, latestAssetId })}\n`);
     console.log(`Loaded ${releases.length} bilingual releases; latest v${releases[0].version}`);
   } else if (command === 'assets') {
-    await restoreLatestRelease(await loadReleases(), {
+    const releases = await loadReleases();
+    const { latestAssetId } = JSON.parse(await readFile(revisionFile, 'utf8'));
+    if (!Number.isSafeInteger(latestAssetId) || latestAssetId <= 0) throw new Error('Missing latest Release asset ID');
+    releases[0].asset.id = latestAssetId;
+    await restoreLatestRelease(releases, {
       directory: resolve('dist'), siteUrl: resolveSiteUrl(process.env.SITE_URL, true).href, token,
     });
     console.log('Restored and verified the latest DMG and public appcast');

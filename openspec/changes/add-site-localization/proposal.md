@@ -18,7 +18,7 @@ CleanU 官网需要为首页、更新日志、隐私政策和支持页提供可�
 - 更新日志以竖向时间线串联版本，保留列表语义，标示链接定位的版本，并在最新稳定版本号旁提供本地化的下载按钮。
 - 页脚品牌链接与导航栏一样，返回当前语言的首页。
 - 新包命名为 CleanU-{version}.dmg，移除文件名中的 universal 后缀；按 JSON 的真实名称匹配附件和输出下载路径，继续兼容历史包原文件名。
-- 更新日志和下载链接都在构建时生成。CleanU 发布后只通知 tag，官网 CI 按最新 Release 的 tag 读取全量 JSON 并恢复安装包，统一部署到 Pages。每次官网重建都查询最新已发布 Release，按其 tag 读取 CleanU 根目录全量 changelogs.json，并恢复对应最新稳定版下载；历史只保留中英文日志，旧安装包保留在私有 GitHub Release；任何文件丢失、被替换、校验失败或超过 25 MiB，都必须停止部署，保留线上网站。需要手动刷新时运行官网自身 Publish，不另设 CleanU 侧的重复同步 workflow。
+- 更新日志和下载链接都在构建时生成。CleanU 发布后只通知 tag，官网 CI 按最新 Release 的 tag 读取全量 JSON 并恢复安装包，统一部署到 Pages。每次官网重建都查询最新已发布 Release，按其 tag 读取 CleanU 根目录全量 changelogs.json，并恢复对应最新稳定版下载；自动和手动发布成功后都将本次部署的公开字段快照同步到官网 `main`，本地开发直接读取该快照；临时附件 ID 和发布修订号不进入快照。历史只保留中英文日志，旧安装包保留在私有 GitHub Release；任何文件丢失、被替换、校验失败或超过 25 MiB，都必须停止部署，保留线上网站。需要手动刷新时运行官网自身 Publish，不另设 CleanU 侧的重复同步 workflow。
 
 ## Capabilities
 

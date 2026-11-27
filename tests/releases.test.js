@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { downloadPath, loadReleases, maxAssetSize, normalizeReleases } from '../src/data/releases.js';
-import { checkProductionRelease, downloadAsset, fetchReleases, restoreLatestRelease } from './releases.js';
+import { checkProductionRelease, downloadAsset, fetchReleases, restoreLatestRelease } from '../scripts/releases.js';
 
 const bytes = Buffer.from('verified fixture DMG');
 const sha256 = createHash('sha256').update(bytes).digest('hex');

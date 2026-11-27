@@ -91,9 +91,9 @@
 
 第 10 节为旧 release-data 方案的验证记录，本节替代其数据源与初始化方式。
 
-第 11 节验证：17 项 Node 测试通过；最新 Release/tag JSON、来源不符、草稿、附件 digest、旧事件、JSON 修订变化与下载校验均覆盖。以临时双语测试快照完成根路径与 /site/ 子路径各八页构建，校验静态正文、HTML 转义、历史无旧下载及最新链接、页面/资源引用。pnpm 自动安装受环境阻断，测试直接使用 node --test，构建直接使用现有 Astro CLI 并关闭遥测。源码 src/data/changelogs.json 保持空数组，临时快照未提交。OpenSpec strict、workflow YAML/shell 与 diff 检查通过；真实 GitHub/Cloudflare 验证留在 11.4，未进行线上发布。
+第 11 节验证：17 项 Node 测试通过；最新 Release/tag JSON、来源不符、草稿、附件 digest、旧事件、JSON 修订变化与下载校验均覆盖。以临时双语测试快照完成根路径与 /site/ 子路径各八页构建，校验静态正文、HTML 转义、历史无旧下载及最新链接、页面/资源引用。pnpm 自动安装受环境阻断，测试直接使用 node --test，构建直接使用现有 Astro CLI 并关闭遥测。后续将官网 `src/data/changelogs.json` 作为本地快照：自动和手动发布成功后均同步该文件。OpenSpec strict、workflow YAML/shell 与 diff 检查通过；真实 GitHub/Cloudflare 验证留在 11.4，未进行线上发布。
 
-命名统一：全量文件为 changelogs.json，版本说明目录及发版 PR 前缀为 changelogs/，官网本地快照为 src/data/changelogs.json；工作流、脚本、测试和文档已同步。23 项 Python 与 17 项 Node 测试、八页静态构建、Debug 构建/启动、两仓库 OpenSpec strict、YAML 与 diff 检查通过。没有提交或线上发布。
+命名统一：全量文件为 changelogs.json，版本说明目录及发版 PR 前缀为 changelogs/，官网本地快照为 `src/data/changelogs.json`；工作流、脚本、测试和文档已同步。23 项 Python 与 17 项 Node 测试、八页静态构建、Debug 构建/启动、两仓库 OpenSpec strict、YAML 与 diff 检查通过。没有提交或线上发布。
 
 ## 12. 发布模块与入口收敛
 

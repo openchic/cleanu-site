@@ -41,7 +41,7 @@ export function normalizeReleases(records) {
   return normalized;
 }
 
-/** Astro only reads local data; development can use an explicitly supplied fixture. */
+/** Read the site-owned release catalog or an explicit local fixture. */
 export async function loadReleases(file = process.env.CLEANU_RELEASES_FILE) {
   return normalizeReleases(file ? JSON.parse(await readFile(file, 'utf8')) : snapshot);
 }

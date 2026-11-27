@@ -21,17 +21,17 @@ CleanU 仓库的 Release 工作流生成或复用中英双语发版 PR。维护�
 | 文件 | 用途 |
 | --- | --- |
 | CleanU 发布 tag 下的 `changelogs.json` | 官网更新日志的来源。保存各版本的中英文说明和发布日期，以及最新版本的 DMG 校验信息 |
-| 官网的 `src/data/changelogs.json` | 本次构建使用的本地快照，由 Publish 从最新稳定 Release 对应的 tag 同步 |
+| 官网的 `src/data/changelogs.json` | 上次成功部署的发布快照，由 Publish 从 CleanU 最新稳定 Release 同步并提交到官网仓库 |
 | 官网发布的 `updates/appcast.json` | App 读取的公开更新清单，提供最新版本号及 DMG 的下载地址、大小和 SHA-256 |
 
 ### 官网同步与部署
 
-1. `pnpm release:sync` 使用 `CLEANU_RELEASES_TOKEN` 查询 App 仓库最新的已发布稳定 Release，从其 tag 读取根目录 `changelogs.json`，核对版本及 DMG 附件，再生成构建快照。通知里的 tag 用于检查该版本已进入发布历史，即使旧通知迟到，也以当前最新稳定版构建。
+1. `pnpm release:sync` 使用 `CLEANU_RELEASES_TOKEN` 查询 App 仓库最新的已发布稳定 Release，从其 tag 读取根目录 `changelogs.json`，核对版本及 DMG 附件，再生成官网快照。官网文件只写公开日志和 DMG 校验字段；附件 ID 与发布修订号保存在被忽略的 `.release-revision.json`，不提交到仓库。通知里的 tag 用于检查该版本已进入发布历史，即使旧通知迟到，也以当前最新稳定版构建。
 2. 项目检查通过后，Astro 从快照生成中英文静态页面。更新日志保留双语历史，按页面语言展示 `notes.zh-CN` 或 `notes.en`。最新条目的发布日期取 GitHub Release 的发布时间。
 3. `pnpm release:assets` 从同一 Release 下载 DMG，校验文件名、大小、SHA-256 和 25 MiB 上限，再输出 `downloads/{version}/{filename}` 与公开 appcast。Pages 只托管最新 DMG，旧包留在 App 仓库的历史 Release。appcast 的 `universal`、`arm64` 和 `x86_64` 条目引用同一个 Universal DMG。
-4. `pnpm site:check` 检查静态页面、站内链接和购买回跳响应头。`pnpm release:check` 在部署前重新核对 Release 数据修订与线上 appcast，阻止版本降级和同版本安装包替换。校验失败时停止部署，线上继续提供上一份完整产物。
+4. `pnpm site:check` 检查静态页面、站内链接和购买回跳响应头。首页版本、下载地址和日志版本列表与发布快照比对，站点地图的每条语言关联与对应页面的 `hreflang` 比对。`pnpm release:check` 在部署前重新核对 Release 数据修订与线上 appcast，阻止版本降级和同版本安装包替换。校验失败时停止部署，线上继续提供上一份完整产物。
 
-App 发版通知和手动运行 [Publish](../.github/workflows/publish.yml) 都会走同一套同步、构建和部署流程。通知触发只部署官网产物。手动 Publish 还会在部署成功后推送官网自己的版本提交与 tag，并创建官网 Release。
+App 发版通知和手动运行 [Publish](../.github/workflows/publish.yml) 都会走同一套同步、构建和部署流程。手动 Publish 还会发布官网版本、tag 和 GitHub Release。两种入口都在发布成功后，把本次部署使用的更新日志同步到官网 `main`；内容相同则跳过。
 
 通知凭据保存在 App 仓库，Release 读取凭据保存在官网仓库。两者只供 CI 使用，配置步骤见 [官网同步凭据](https://github.com/openchic/cleanu/blob/main/docs/direct-distribution-setup.md#53-配置官网同步凭据)。
 
@@ -41,7 +41,7 @@ App 发版通知和手动运行 [Publish](../.github/workflows/publish.yml) 都�
 
 浏览器首次访问时记录看到的版本号。回访发现更高版本时，在版本号右上角显示无文字的青绿色圆点，并记录新版本。同一版本下一次访问时不再提示。中英文首页共用同一份本地记录，旧缓存页面不会把它改回低版本。圆点表示官网已有新版本，比较的是该浏览器曾看到的版本。
 
-官网只在浏览器本地保存已见版本，提示无需额外的网络请求。浏览器无法使用存储或禁用了 JavaScript 时，仍能使用静态版本链接和下载按钮。没有发布数据的本地预览省略版本号和圆点，下载按钮通向对应语言的更新日志。相邻目录有 App 仓库时，在官网根目录运行 `CLEANU_RELEASES_FILE=../clean-mac/changelogs.json pnpm dev` 即可用本地发布清单预览。
+官网只在浏览器本地保存已见版本，提示无需额外的网络请求。浏览器无法使用存储或禁用了 JavaScript 时，仍能使用静态版本链接和下载按钮。本地 `pnpm dev` 读取当前官网工作区的 `src/data/changelogs.json`，不访问 App 仓库或联网更新文件。本地更新官网 `main`（如运行 `git pull`）即可取得最近成功发布的快照。要检查空状态时，可用 `CLEANU_RELEASES_FILE` 指向空测试清单。本地没有安装包，下载链接 404 属正常。
 
 ### App 内检查更新
 

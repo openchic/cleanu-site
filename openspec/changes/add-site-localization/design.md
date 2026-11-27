@@ -116,13 +116,15 @@ Cloudflare Pages 会为未知路径选择最近的 `404.html`。`src/pages/404.a
 
 双语历史保存在 changelogs.json，GitHub Release body 只取本次版本的 notes.en。changelogs.json 与项目版本、appcast、确认后的说明进入同一发布 commit 和 tag。Release 只附 Universal DMG，JSON 保存在 tag 对应源码中，无需重复附件。
 
-Release 与 DMG 上传成功后 notify-site 使用 gh api 只向官网发送 cleanu-release/tag 事件。官网以 CLEANU_RELEASES_TOKEN 查询最新稳定 Release，按该 tag 从 CleanU 源码读取全量 changelogs.json，再从同一 Release 获取 DMG 附件 ID。旧通知也读取当前最新 Release，不能降级。GitHub Release/tag 是持久化来源；移除准备 Artifact、运行 ID、再次 prepare 与官网 release-data 分支及写入合并代码。手动刷新通过官网自身 Publish 工作流执行，沿用完整同步、构建和部署，并保留官网自己的版本/tag/Release 流程；不再保留应用侧手动同步入口。
+Release 与 DMG 上传成功后 notify-site 使用 gh api 只向官网发送 cleanu-release/tag 事件。官网以 CLEANU_RELEASES_TOKEN 查询最新稳定 Release，按该 tag 从 CleanU 源码读取全量 changelogs.json，再从同一 Release 获取 DMG 附件 ID。旧通知也读取当前最新 Release，不能降级。GitHub Release/tag 是权威来源；官网 `src/data/changelogs.json` 是发布后写回 `main` 的公开字段快照，供本地开发直接读取。同步时从快照剥离附件 ID，附件 ID 与数据修订号只存于被忽略的 `.release-revision.json`，用于还原 DMG 和部署前复核。两种入口都在发布成功后，将已部署快照同步到官网 main。通过 GitHub Contents API 按 main 上该文件的 blob SHA 更新，内容相同则跳过。手动发布还会在同步快照前推送官网版本与 tag，并创建官网 Release。
+
+本地 `pnpm dev` 读取当前工作区中的快照，不访问网络或改动 Git 状态。工作流将新快照推到官网 `main` 后，本地开发者更新该分支（例如 `git pull`）即可使用新日志。
 
 每次官网构建均拉取上述数据，Astro 输出静态双语历史与首页直链。构建后恢复唯一最新 DMG 到 dist/downloads/{version}/{name}，核对大小、SHA-256、25 MiB 上限，并生成公网 updates/appcast.json；部署前再核对最新 Release/tag 的 JSON 修订与线上版本。同版本包不可替换，任何失败不进入部署。生产部署串行执行；官网代码重建和回滚也走完整 Publish workflow，关闭绕过该 workflow 的 Cloudflare Git 自动构建。历史日志保留，Pages 仅保留最新包，旧包留在私有 Release。GitHub/Cloudflare 凭据配置与真实线上验收仍需维护者完成。
 
 ## 官网发布模块职责
 
-src/data/releases.js 只负责本地 JSON 读取、契约校验、版本排序与下载路径，供首页和日志 Astro 组件使用，不包含 GitHub 请求。scripts/releases.js 负责所有发布网络操作与唯一 CLI：sync 在构建前写入快照和修订；assets 在构建后校验并恢复唯一最新 DMG 和公网 appcast；check 在部署前核对最新发布修订与线上版本。原先三个包装入口及 release-assets.js 合并到该执行脚本，共用一处 CLI 错误处理，测试导入脚本时不执行 CLI。
+src/data/releases.js 只负责本地 JSON 读取、契约校验、版本排序与下载路径，供首页和日志 Astro 组件使用，不包含 GitHub 请求。scripts/releases.js 负责所有发布网络操作与唯一 CLI：sync 在构建前写入公开字段快照，并把附件 ID 和修订号写入被忽略的临时文件；assets 从该临时文件读取 ID，在构建后恢复唯一最新 DMG 和公网 appcast；check 在部署前核对最新发布修订与线上版本。原先三个包装入口及 release-assets.js 合并到该执行脚本，共用一处 CLI 错误处理，测试导入脚本时不执行 CLI。
 
 应用侧使用 gh api 通知，官网继续核对最新稳定 Release、tag JSON 和附件数据，并在真实下载后检查大小/hash。减少入口不改变失败停止部署、凭据隔离、最新包恢复、历史日志保留和串行部署约束。
 
