@@ -20,7 +20,7 @@
   border-radius: 999px;
   font-weight: 600;
   font-size: 0.95rem;
-  padding: var(--sp-3) var(--sp-6);
+  padding: var(--sp-2) var(--sp-6);
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.18s ease, border-color 0.18s ease,

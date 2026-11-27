@@ -49,7 +49,9 @@ App 发版通知和手动运行 [Publish](../.github/workflows/publish.yml) 都�
 
 ## 购买配置与上线
 
-官网使用 Dodo Live Mode 的正式付款链接。[purchase-config.json](../src/data/purchase-config.json) 保存公开的商品和付款链接默认值，构建时以非空的 `DODO_PRODUCT_ID` 和 `DODO_PAYMENT_LINK` 覆盖对应字段。
+本地环境变量统一写入 Git 忽略的 `.env.development.local`，由 `pnpm dev` 启动时加载。要开启测试购买，将 `PURCHASE_ENABLED` 设为 `true`，用 `DODO_PRODUCT_ID` 和 `DODO_PAYMENT_LINK` 指定相互匹配的 Dodo Test Mode 商品，并将 `SITE_URL` 设为本机地址（例如 `http://localhost:4321`）。生产发布从 GitHub Actions 注入同名变量，使用公开 HTTPS 地址和 Live Mode 商品。
+
+发布前在 GitHub 仓库变量中核对 Dodo Live Mode 的商品和付款链接。站点直接使用注入的链接，校验 HTTPS、商品路径、数量与回跳参数。
 
 | 官网仓库变量 | 用途 |
 | --- | --- |

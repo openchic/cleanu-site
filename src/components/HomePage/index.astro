@@ -1,8 +1,9 @@
 ---
 import { downloadPath, loadReleases, releaseId } from '../../data/releases.js';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { assetHref, pageHref, translationsFor } from '../../i18n/translations.js';
-import { checkedPurchaseConfig, checkoutHref } from '../../data/purchase.js';
+import { absoluteUrls, assetHref, pageHref, translationsFor } from '../../i18n/translations.js';
+import { checkoutHref } from '../../data/purchase.js';
+import { faqNode, softwareNode } from '../../data/structured-data.js';
 import './home.css';
 
 const { locale } = Astro.props;
@@ -10,10 +11,13 @@ const translations = translationsFor(locale);
 const latestRelease = (await loadReleases())[0];
 const changelogHref = pageHref('changelog', locale);
 const downloadHref = latestRelease ? assetHref(downloadPath(latestRelease)) : changelogHref;
-const purchase = await checkedPurchaseConfig();
-const purchaseHref = purchase.enabled ? checkoutHref(purchase, process.env.SITE_URL, locale) : null;
+const purchaseHref = checkoutHref(locale);
+const urls = absoluteUrls();
+const structuredData = urls
+  ? [softwareNode({ locale, translations, urls }, latestRelease), faqNode({ locale, translations, urls })]
+  : [];
 ---
-<SiteLayout page="index" locale={locale} translations={translations}>
+<SiteLayout page="index" locale={locale} translations={translations} structuredData={structuredData}>
 <main id="main">
 
   <!-- 首屏 -->

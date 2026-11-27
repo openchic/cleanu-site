@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
-import { checkoutHeaders, checkoutHref, loadPurchaseConfig, validatePurchaseConfig } from '../src/data/purchase.js';
+import { checkoutHeaders, checkoutHref } from '../src/data/purchase.js';
 
-const config = {
-  enabled: true, productID: 'pdt_fixture',
-  paymentLink: 'https://checkout.dodopayments.com/buy/pdt_fixture',
+const environment = {
+  PURCHASE_ENABLED: 'true',
+  DODO_PRODUCT_ID: 'pdt_fixture',
+  DODO_PAYMENT_LINK: 'https://checkout.fixture.test/buy/pdt_fixture',
+  SITE_URL: 'https://youngluo.github.io/',
 };
-const context = { siteUrl: 'https://cleanu.ls63.cc/' };
 
 test('privacy copy discloses automatic verification without exposing check timing', async () => {
   const checkTiming = /七天|7\s*天|seven days|7 days|每日|daily|24\s*(小时|hours)/i;
@@ -21,12 +22,13 @@ test('privacy copy discloses automatic verification without exposing check timin
   }
 });
 
-test('purchases default closed and missing live inputs block opening', async () => {
-  const value = await loadPurchaseConfig({});
-  assert.equal(value.enabled, false);
-  assert.doesNotThrow(() => validatePurchaseConfig(value));
-  assert.throws(() => validatePurchaseConfig({ ...value, enabled: true }, context), /real Dodo/);
-  await assert.rejects(() => loadPurchaseConfig({ PURCHASE_ENABLED: 'yes' }), /true or false/);
+test('purchases default closed and require complete inputs when enabled', () => {
+  assert.equal(checkoutHref('en', {}), null);
+  assert.equal(checkoutHref('en', { PURCHASE_ENABLED: 'false' }), null);
+  assert.throws(() => checkoutHref('en', { PURCHASE_ENABLED: 'yes' }), /true or false/);
+  for (const key of ['DODO_PRODUCT_ID', 'DODO_PAYMENT_LINK', 'SITE_URL']) {
+    assert.throws(() => checkoutHref('en', { ...environment, [key]: '' }));
+  }
 });
 
 test('missing-email guidance has official entry points and trial copy matches explicit opt-in', async () => {
@@ -50,17 +52,7 @@ test('missing-email guidance has official entry points and trial copy matches ex
   }
 });
 
-test('opening requires a matching live product and checkout link', () => {
-  assert.doesNotThrow(() => validatePurchaseConfig(config, context));
-  for (const changes of [
-    { productID: '' }, { productID: 'pdt_example' },
-    { paymentLink: 'https://test.checkout.dodopayments.com/buy/pdt_fixture' },
-  ]) assert.throws(() => validatePurchaseConfig({ ...config, ...changes }, context));
-});
-
 test('checkout support is hosted by Dodo and the official email stays on the support page', async () => {
-  const loaded = await loadPurchaseConfig({});
-  assert.equal(Object.keys(loaded).some((key) => /support|email/i.test(key)), false);
   const checkout = await readFile(new URL('../src/components/CheckoutPage/index.astro', import.meta.url), 'utf8');
   assert.doesNotMatch(checkout, /mailto:/);
   for (const locale of ['zh-CN', 'en']) {
@@ -73,44 +65,40 @@ test('checkout support is hosted by Dodo and the official email stays on the sup
   assert.doesNotMatch(workflow, /PURCHASE_SUPPORT_EMAIL/);
 });
 
-test('checkout fixes one item and a language-specific return inside root or deployment base', () => {
-  for (const base of ['/', '/cleanu-site/']) {
-    for (const locale of ['zh-CN', 'en']) {
-      const site = `https://cleanu.ls63.cc${base}`;
-      const url = new URL(checkoutHref(config, site, locale));
-      assert.equal(url.origin, 'https://checkout.dodopayments.com');
-      assert.equal(url.pathname, '/buy/pdt_fixture');
-      assert.equal(url.searchParams.get('quantity'), '1');
-      assert.equal(url.searchParams.get('redirect_url'), `${site}${locale === 'en' ? 'en/' : ''}purchase/complete/`);
+test('checkout uses the configured link and localized return route on every deployment', () => {
+  for (const SITE_URL of ['https://youngluo.github.io/', 'https://youngluo.github.io/site/', 'http://localhost:4321/site/']) {
+    for (const host of ['checkout.fixture.test', 'sandbox.fixture.test']) {
+      const DODO_PAYMENT_LINK = `https://${host}/buy/pdt_fixture?quantity=1`;
+      for (const locale of ['zh-CN', 'en']) {
+        const link = new URL(checkoutHref(locale, { ...environment, SITE_URL, DODO_PAYMENT_LINK }));
+        assert.equal(link.origin, `https://${host}`);
+        assert.equal(link.pathname, '/buy/pdt_fixture');
+        assert.deepEqual([...link.searchParams], [
+          ['quantity', '1'],
+          ['redirect_url', `${SITE_URL}${locale === 'en' ? 'en/' : ''}purchase/complete`],
+        ]);
+      }
     }
   }
 });
 
-test('payment links reject host spoofing, credentials, wrong product and injected parameters', () => {
-  for (const link of [
-    'http://checkout.dodopayments.com/buy/pdt_fixture',
-    'https://checkout.dodopayments.com.evil.invalid/buy/pdt_fixture',
-    'https://user@checkout.dodopayments.com/buy/pdt_fixture',
-    'https://checkout.dodopayments.com/buy/pdt_other',
-    `${config.paymentLink}?quantity=2`, `${config.paymentLink}?email=private`,
-    `${config.paymentLink}?redirect_url=https://elsewhere.invalid/`, `${config.paymentLink}#secret`,
-  ]) assert.throws(() => checkoutHref({ ...config, paymentLink: link }, context.siteUrl, 'en'));
-  assert.throws(() => checkoutHref(config, 'https://localhost/', 'en'));
-  assert.throws(() => checkoutHref(config, context.siteUrl, 'fr'));
+test('checkout accepts an existing localized callback including the old trailing slash', () => {
+  const previous = new URL(environment.DODO_PAYMENT_LINK);
+  previous.searchParams.set('redirect_url', new URL('purchase/complete/', environment.SITE_URL).href);
+  const link = new URL(checkoutHref('en', { ...environment, DODO_PAYMENT_LINK: previous.href }));
+  assert.equal(link.searchParams.get('redirect_url'), new URL('en/purchase/complete', environment.SITE_URL).href);
 });
 
-test('website always uses production checkout and rejects test links', async () => {
-  const loaded = await loadPurchaseConfig({ DODO_ENVIRONMENT: 'test' });
-  assert.equal('environment' in loaded, false);
-  assert.equal(loaded.productID, '');
-  const testConfig = { ...config, paymentLink: 'https://test.checkout.dodopayments.com/buy/pdt_fixture' };
-  for (const base of ['/', '/cleanu-site/']) {
-    for (const locale of ['zh-CN', 'en']) {
-      const site = `https://cleanu.ls63.cc${base}`;
-      assert.throws(() => checkoutHref(testConfig, site, locale), /host or product/);
-    }
-  }
-  assert.throws(() => validatePurchaseConfig(testConfig, context), /host or product/);
+test('checkout rejects malformed links, wrong products and unexpected parameters', () => {
+  for (const DODO_PAYMENT_LINK of [
+    'http://checkout.fixture.test/buy/pdt_fixture',
+    'https://user@checkout.fixture.test/buy/pdt_fixture',
+    'https://checkout.fixture.test/buy/pdt_other',
+    ...['?quantity=2', '?email=private', '?redirect_url=https://elsewhere.invalid/', '#secret']
+      .map((suffix) => environment.DODO_PAYMENT_LINK + suffix),
+  ]) assert.throws(() => checkoutHref('en', { ...environment, DODO_PAYMENT_LINK }));
+  assert.throws(() => checkoutHref('en', { ...environment, DODO_PRODUCT_ID: 'pdt_example' }), /DODO_PRODUCT_ID/);
+  assert.throws(() => checkoutHref('fr', environment), /Unsupported site locale/);
 });
 
 test('return initialization keeps only a status enum, clears query, fragment and history state', async () => {

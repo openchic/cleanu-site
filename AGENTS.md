@@ -19,6 +19,7 @@
 
 ## 开发服务
 
+- `pnpm dev` 从 Git 忽略的 `.env.development.local` 加载本地环境变量。测试购买与正式发布使用同名变量 `SITE_URL`、`PURCHASE_ENABLED`、`DODO_PRODUCT_ID`、`DODO_PAYMENT_LINK`。
 - 修改界面、文案或样式后，自动启动开发服务（`pnpm dev`，http://localhost:4321），在浏览器校验受影响页面（中英、明暗）；服务已在运行则复用，避免重复占用端口。
 - 本地 `pnpm dev` 读取当前官网工作区的 `src/data/changelogs.json`，不联网拉取或改动 Git 状态。更新本地 `main` 即可读取新日志。可用 `CLEANU_RELEASES_FILE` 指定测试清单，清单为空数组时显示空状态。本地无下载产物，下载链接 404 属正常。
 - 交付时保持服务运行，并给出可访问的页面链接。

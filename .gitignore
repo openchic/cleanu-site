@@ -7,3 +7,4 @@ shots/
 video/
 
 .release-revision.json
+.env.development.local
