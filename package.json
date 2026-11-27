@@ -1,7 +1,7 @@
 {
   "name": "cleanu-site",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=.env.development.local ./node_modules/astro/bin/astro.mjs dev",
