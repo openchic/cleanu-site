@@ -1,19 +1,29 @@
 [
   {
     "version": "0.2.0",
-    "published_at": "2026-11-25T05:32:53+00:00",
+    "published_at": "2026-11-25T05:33:10.000Z",
     "notes": {
       "zh-CN": [
-        "空间分析结果显示添加日期。",
-        "候选项支持分组展示。",
-        "仅在文本隐藏时显示候选提示。",
-        "优化应用残留检测与安全清理。"
+        "空间分析结果中显示了添加日期。",
+        "项目构件支持分组展示并优化了路径显示。",
+        "仅在隐藏文本时显示候选提示信息。",
+        "限制了详情高度并保留了滚动位置。",
+        "强化了残留文件清理并稳定了行动画。",
+        "改进了应用残留检测与安全移除。",
+        "优化了候选项并增强了执行安全性。",
+        "加固了清理验证与构建保护。",
+        "优化了空间分析与项目清理结果。"
       ],
       "en": [
-        "Displayed each item's added date in space analysis.",
-        "Grouped candidate items.",
-        "Showed candidate tooltips only when text was hidden.",
-        "Improved app leftover detection and safe cleanup."
+        "Added the date added in space analysis.",
+        "Grouped project artifacts and refined path display.",
+        "Showed candidate tooltips only for hidden text.",
+        "Limited detail height and preserved scroll position.",
+        "Hardened residue cleanup and stabilized row animations.",
+        "Improved app leftover detection and safe removal.",
+        "Refined candidates and hardened execution safety.",
+        "Hardened cleanup validation and build protection.",
+        "Refined space analysis and project cleanup results."
       ]
     },
     "asset": {
@@ -24,13 +34,21 @@
   },
   {
     "version": "0.1.0",
-    "published_at": "2026-11-01T04:01:18+00:00",
+    "published_at": "2026-11-01T04:01:18.000Z",
     "notes": {
       "zh-CN": [
-        "正式发布 CleanU，一款 macOS 菜单栏清理工具。"
+        "推出了全新的 CleanU macOS 菜单栏清理应用，提供双语支持与静态分发机制。",
+        "新增了 Dodo 授权与许可证激活功能。",
+        "扩展了扫描与清理覆盖范围，支持应用残留、下载的应用程序安装包及开发者缓存。",
+        "优化了清理流程、扫描体验以及面板界面设计。",
+        "更新了应用与菜单栏图标。"
       ],
       "en": [
-        "Officially released CleanU, a menu bar cleanup utility for macOS."
+        "Introduced the brand new CleanU macOS menu bar cleaning application with bilingual support and static distribution.",
+        "Added Dodo authorization and license activation capabilities.",
+        "Expanded scan and cleanup coverage to support app leftovers, downloaded app installers, and developer caches.",
+        "Optimized the cleanup workflow, scan experience, and panel user interface.",
+        "Refreshed the application and menu bar artwork."
       ]
     },
     "asset": {
